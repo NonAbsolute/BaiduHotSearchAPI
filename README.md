@@ -1,7 +1,10 @@
 # BaiduHotSearchAPI
 百度热搜API，继[在你的网站上添加百度热搜榜一栏](https://gitee.com/deng_wenyi/Crawling_BaiDu_Hot_search_list)
+
 By FJD团队-DengXianSheng
+
 感谢百度风云榜提供数据支持！！
+
 **本项目仅交流学习**
 
 ### 请求类型
