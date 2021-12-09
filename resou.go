@@ -7,11 +7,13 @@ import (
 	"encoding/json"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli"
+	"golang.org/x/sync/errgroup"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
 	"strconv"
+	"github.com/didip/tollbooth"
 )
 
 type Value struct {
@@ -104,7 +106,6 @@ func handleReSouGetIsPost(writer http.ResponseWriter, request *http.Request) {
 	// 解析参数 存入map
 	decoder.Decode(&params)
 	if params["sum"] != "" {
-		fmt.Printf("POST json: sum=%s\n", params["sum"])
 		sum, err := strconv.Atoi(params["sum"])
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -118,7 +119,6 @@ func handleReSouGetIsPost(writer http.ResponseWriter, request *http.Request) {
 		//接收GET请求
 		query := request.URL.Query()
 		if query.Get("sum") != "" {
-			fmt.Printf("GET: sum=%s\n", query.Get("sum"))
 			sum, err := strconv.Atoi(query.Get("sum"))
 			if err != nil {
 				writer.WriteHeader(http.StatusInternalServerError)
@@ -186,15 +186,31 @@ func inCliValue() (string, string) {
 }
 
 func main() {
-	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/resou", handleReSouGetIsPost)
+	var group errgroup.Group
+	lmt := tollbooth.NewLimiter(30, nil)
+	// Set a custom message.
+	lmt.SetMessage("")
+	// Set a custom content-type.
+	lmt.SetMessageContentType("text/json; charset=utf-8")
+	lmt.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) { 
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"data":null,"retcode":403,"status":"failed","wording":"请求过于频繁，请稍后重试"}`))
+	})
 
 	port, Sport := inCliValue()
 	fmt.Println("Running at port " + port + ",https port " + Sport + " ...")
 	fmt.Println("Other options input -h")
-	err := http.ListenAndServe(":"+port, nil)
-	//未处理https请求
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err.Error())
+
+	http.Handle("/", tollbooth.LimitFuncHandler(lmt,handleIndex))
+	http.Handle("/resou", tollbooth.LimitFuncHandler(lmt,handleReSouGetIsPost))
+
+	group.Go(func() error {
+		return http.ListenAndServe(":"+port, nil)
+	})
+	group.Go(func() error {
+		return http.ListenAndServeTLS(":"+Sport, "cert.pem", "key.pem", nil)
+	})
+	if err := group.Wait(); err != nil {
+		log.Fatal(err)
 	}
 }
