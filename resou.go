@@ -5,6 +5,7 @@ import (
 	"net/http"
 	// "html/template"
 	"encoding/json"
+	"github.com/didip/tollbooth"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli"
 	"golang.org/x/sync/errgroup"
@@ -13,7 +14,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"github.com/didip/tollbooth"
 )
 
 type Value struct {
@@ -192,7 +192,7 @@ func main() {
 	lmt.SetMessage("")
 	// Set a custom content-type.
 	lmt.SetMessageContentType("text/json; charset=utf-8")
-	lmt.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) { 
+	lmt.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(`{"data":null,"retcode":403,"status":"failed","wording":"请求过于频繁，请稍后重试"}`))
 	})
@@ -201,8 +201,8 @@ func main() {
 	fmt.Println("Running at port " + port + ",https port " + Sport + " ...")
 	fmt.Println("Other options input -h")
 
-	http.Handle("/", tollbooth.LimitFuncHandler(lmt,handleIndex))
-	http.Handle("/resou", tollbooth.LimitFuncHandler(lmt,handleReSouGetIsPost))
+	http.Handle("/", tollbooth.LimitFuncHandler(lmt, handleIndex))
+	http.Handle("/resou", tollbooth.LimitFuncHandler(lmt, handleReSouGetIsPost))
 
 	group.Go(func() error {
 		return http.ListenAndServe(":"+port, nil)

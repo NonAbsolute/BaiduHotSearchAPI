@@ -7,6 +7,10 @@ By FJD团队-DengXianSheng
 
 **本项目仅交流学习**
 
+### 示例地址
+
+[api.geekzwzs.cn/resou](https://api.geekzwzs.cn/resou)
+
 ### 请求类型
 
 GET/POST(JSON)
