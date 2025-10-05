@@ -9,7 +9,7 @@ By FJD团队-DengXianSheng
 
 ### 示例地址
 
-[api.geekzwzs.cn/resou](https://api.geekzwzs.cn/resou)
+[api.geekzwzs.cn/resou](https://api.geekzwzs.cn/resou)（已不可访问）
 
 ### 请求类型
 
